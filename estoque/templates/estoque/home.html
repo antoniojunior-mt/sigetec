@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Controle de Estoque - SEGITEC</title>
+    <style>
+        body { font-family: sans-serif; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Itens em Estoque</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome do Item</th>
+                <th>Descrição</th>
+                <th>Quantidade Disponível</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in todos_os_itens %}
+            <tr>
+                <td>{{ item.nome }}</td>
+                <td>{{ item.descricao }}</td>
+                <td>{{ item.quantidade_disponivel }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">Nenhum item cadastrado no estoque.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
