@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalhes de: {{ item.nome }}</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; }
+        a { color: #007bff; }
+    </style>
+</head>
+<body>
+    <h1>{{ item.nome }}</h1>
+    <p><strong>Descrição:</strong> {{ item.descricao|default:"Nenhuma descrição informada." }}</p>
+    <p><strong>Quantidade Total:</strong> {{ item.quantidade_total }}</p>
+    <p><strong>Quantidade Disponível:</strong> {{ item.quantidade_disponivel }}</p>
+
+    <hr>
+    <a href="{% url 'estoque:home' %}">Voltar para a lista de itens</a>
+</body>
+</html>

@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF--8">
     <title>Controle de Estoque - SEGITEC</title>
     <style>
-        body { font-family: sans-serif; }
-        table { width: 100%; border-collapse: collapse; }
+        body { font-family: sans-serif; max-width: 960px; margin: auto; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
+        a { text-decoration: none; color: #007bff; font-weight: bold; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -23,8 +25,8 @@
         <tbody>
             {% for item in todos_os_itens %}
             <tr>
-                <td>{{ item.nome }}</td>
-                <td>{{ item.descricao }}</td>
+                <td><a href="{% url 'estoque:detalhe_item' item.pk %}">{{ item.nome }}</a></td>
+                <td>{{ item.descricao|default:"Nenhuma descrição informada." }}</td>
                 <td>{{ item.quantidade_disponivel }}</td>
             </tr>
             {% empty %}

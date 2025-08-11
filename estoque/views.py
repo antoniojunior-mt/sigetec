@@ -1,16 +1,19 @@
-from django.shortcuts import render
-from .models import Item # Importamos nosso modelo de Item
-
-# Create your views here.
+from django.shortcuts import render, get_object_or_404 # Importe esta nova função
+from .models import Item
 
 def home(request):
-    # 1. Buscar todos os itens do banco de dados
+    # ... (sua view home continua igual)
     itens = Item.objects.all()
-
-    # 2. Criar um "contexto" para enviar os dados para o template
     context = {
         'todos_os_itens': itens
     }
-
-    # 3. Renderizar o template HTML, passando os dados do contexto
     return render(request, 'estoque/home.html', context)
+
+# --- ADICIONE ESTA NOVA FUNÇÃO ---
+def detalhe_item(request, pk): # Ponto crítico
+    item = get_object_or_404(Item, pk=pk)
+    context = {
+        'item': item
+    }
+    return render(request, 'estoque/detalhe_item.html', context)
+

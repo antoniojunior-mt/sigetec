@@ -1,8 +1,7 @@
 from django.contrib import admin
-from django.urls import path, include # Adicione 'include' aqui
+from django.urls import path, include # Ponto crítico 1
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # Adicione esta linha:
-    path('', include('estoque.urls')), # Diz ao projeto para usar as URLs do app estoque
+    path('', include('estoque.urls')), # Ponto crítico 2
 ]

@@ -1,9 +1,9 @@
 from django.urls import path
-from . import views # Importa as views do app atual
+from . import views
 
-app_name = 'estoque' # Boa prática para organizar as URLs
+app_name = 'estoque' # Ponto crítico 1
 
 urlpatterns = [
-    # Quando o usuário acessar a URL raiz do app, chame a função 'home' da views.py
     path('', views.home, name='home'),
+    path('item/<int:pk>/', views.detalhe_item, name='detalhe_item'), # Ponto crítico 2
 ]
