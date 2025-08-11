@@ -1,8 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect # Adicione redirect
 from django.contrib import messages # Para mostrar mensagens ao usuário
 from django.db import transaction # Para garantir a segurança da transação
-from .models import Item
 from .forms import MovimentacaoForm # Importe nosso novo formulário
+from .models import Item, Movimentacao
+from django.db.models import Count
 
 def home(request):
     # ... (sua view home continua igual)
@@ -66,3 +67,23 @@ def movimentar_item(request, pk):
         'item': item
     }
     return render(request, 'estoque/movimentar_item.html', context)
+
+def relatorios(request):
+    # Relatório 1: Movimentações por escola
+    # values('escola__nome') -> Agrupa os resultados pelo nome da escola.
+    # annotate(total_movimentacoes=Count('id')) -> Para cada grupo, conta os IDs e nomeia o resultado de "total_movimentacoes".
+    # order_by('-total_movimentacoes') -> Ordena do maior para o menor.
+    movimentacoes_por_escola = Movimentacao.objects.values('escola__nome').annotate(
+        total_movimentacoes=Count('id')
+    ).order_by('-total_movimentacoes')
+
+    # Relatório 2: Últimas 10 movimentações
+    # order_by('-data') -> Ordena pela data, da mais nova para a mais antiga.
+    # [:10] -> Pega apenas os 10 primeiros resultados.
+    ultimas_movimentacoes = Movimentacao.objects.all().order_by('-data')[:10]
+
+    context = {
+        'movimentacoes_por_escola': movimentacoes_por_escola,
+        'ultimas_movimentacoes': ultimas_movimentacoes,
+    }
+    return render(request, 'estoque/relatorios.html', context)

@@ -1,0 +1,58 @@
+{% extends 'estoque/base.html' %}
+
+{% block title %}Relatórios - SEGITEC{% endblock %}
+
+{% block content %}
+    <h1>Relatórios do Sistema</h1>
+    <hr>
+
+    <h2 class="mt-4">Total de Movimentações por Escola</h2>
+    <table class="table table-hover table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Nome da Escola</th>
+                <th>Total de Movimentações Recebidas</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for relatorio in movimentacoes_por_escola %}
+            <tr>
+                <td>{{ relatorio.escola__nome }}</td>
+                <td>{{ relatorio.total_movimentacoes }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" class="text-center">Nenhuma movimentação registrada.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2 class="mt-5">Últimas 10 Movimentações</h2>
+    <table class="table table-hover table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Item</th>
+                <th>Escola</th>
+                <th>Tipo</th>
+                <th>Quantidade</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mov in ultimas_movimentacoes %}
+            <tr>
+                <td>{{ mov.item.nome }}</td>
+                <td>{{ mov.escola.nome }}</td>
+                <td>{{ mov.get_tipo_display }}</td>
+                <td>{{ mov.quantidade }}</td>
+                <td>{{ mov.data|date:"d/m/Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">Nenhuma movimentação registrada.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

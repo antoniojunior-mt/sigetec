@@ -7,4 +7,5 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('item/<int:pk>/', views.detalhe_item, name='detalhe_item'), # Ponto crítico 2
     path('item/<int:pk>/movimentar/', views.movimentar_item, name='movimentar_item'),
+    path('relatorios/', views.relatorios, name='relatorios'),
 ]

@@ -1,35 +1,28 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Detalhes de: {{ item.nome }}</title>
-    <style>
-        body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; }
-        a { color: #007bff; }
-    </style>
-</head>
-<hr>
-    <a href="{% url 'estoque:home' %}">Voltar para a lista de itens</a>
+{% extends 'estoque/base.html' %}
 
-    <h2>Ações</h2>
-    <p><a href="{% url 'estoque:movimentar_item' item.pk %}">Registrar Movimentação</a></p>
-<body>
-    <h1>{{ item.nome }}</h1>
-    <p><strong>Descrição:</strong> {{ item.descricao|default:"Nenhuma descrição informada." }}</p>
-    <p><strong>Quantidade Total:</strong> {{ item.quantidade_total }}</p>
-    <p><strong>Quantidade Disponível:</strong> {{ item.quantidade_disponivel }}</p>
+{% block title %}Detalhes de: {{ item.nome }}{% endblock %}
 
-    <hr>
-    <a href="{% url 'estoque:home' %}">Voltar para a lista de itens</a>
-</body>
+{% block content %}
     {% if messages %}
-            <ul class="messages" style="list-style-type: none; padding: 0;">
-                {% for message in messages %}
-                    <li style="padding: 10px; margin-bottom: 10px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
-                        {{ message }}
-                    </li>
-                {% endfor %}
-            </ul>
+        {% for message in messages %}
+            <div class="alert alert-success" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
     {% endif %}
-    ```
-</html>
+
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title mb-0">{{ item.nome }}</h1>
+        </div>
+        <div class="card-body">
+            <p class="card-text"><strong>Descrição:</strong> {{ item.descricao|default:"Nenhuma descrição informada." }}</p>
+            <p class="card-text"><strong>Quantidade Total em Estoque:</strong> {{ item.quantidade_total }}</p>
+            <p class="card-text"><strong>Quantidade Disponível:</strong> {{ item.quantidade_disponivel }}</p>
+        </div>
+        <div class="card-footer text-body-secondary">
+            <a href="{% url 'estoque:movimentar_item' item.pk %}" class="btn btn-success">Registrar Movimentação</a>
+            <a href="{% url 'estoque:home' %}" class="btn btn-secondary">Voltar para a Lista</a>
+        </div>
+    </div>
+{% endblock %}

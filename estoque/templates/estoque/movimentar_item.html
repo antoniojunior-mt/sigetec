@@ -1,26 +1,34 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Movimentar: {{ item.nome }}</title>
-    <style>
-        body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; }
-        form { margin-top: 20px; }
-        form p { margin-bottom: 10px; }
-        label { display: block; margin-bottom: 5px; }
-        button { padding: 10px 15px; background-color: #28a745; color: white; border: none; cursor: pointer; }
-        a { color: #007bff; }
-    </style>
-</head>
-<body>
-    <h1>Registrar Movimentação para: {{ item.nome }}</h1>
-    <p><strong>Disponível em estoque:</strong> {{ item.quantidade_disponivel }}</p>
+{% extends 'estoque/base.html' %}
 
-    <form method="post">
-        {% csrf_token %} {{ form.as_p }} <button type="submit">Salvar Movimentação</button>
-    </form>
+{% block title %}Movimentar: {{ item.nome }}{% endblock %}
 
-    <hr>
-    <a href="{% url 'estoque:detalhe_item' item.pk %}">Cancelar e Voltar</a>
-</body>
-</html>
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title mb-0">Registrar Movimentação para: {{ item.nome }}</h1>
+        </div>
+        <div class="card-body">
+            <p><strong>Disponível em estoque:</strong> <span class="badge bg-info fs-6">{{ item.quantidade_disponivel }}</span></p>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <div class="alert alert-danger mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn btn-primary">Salvar Movimentação</button>
+                <a href="{% url 'estoque:detalhe_item' item.pk %}" class="btn btn-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+{% endblock %}
