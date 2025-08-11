@@ -8,6 +8,11 @@
         a { color: #007bff; }
     </style>
 </head>
+<hr>
+    <a href="{% url 'estoque:home' %}">Voltar para a lista de itens</a>
+
+    <h2>Ações</h2>
+    <p><a href="{% url 'estoque:movimentar_item' item.pk %}">Registrar Movimentação</a></p>
 <body>
     <h1>{{ item.nome }}</h1>
     <p><strong>Descrição:</strong> {{ item.descricao|default:"Nenhuma descrição informada." }}</p>
@@ -17,4 +22,14 @@
     <hr>
     <a href="{% url 'estoque:home' %}">Voltar para a lista de itens</a>
 </body>
+    {% if messages %}
+            <ul class="messages" style="list-style-type: none; padding: 0;">
+                {% for message in messages %}
+                    <li style="padding: 10px; margin-bottom: 10px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
+                        {{ message }}
+                    </li>
+                {% endfor %}
+            </ul>
+    {% endif %}
+    ```
 </html>
