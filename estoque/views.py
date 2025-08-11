@@ -1,9 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect # Adicione redirect
 from django.contrib import messages # Para mostrar mensagens ao usuário
 from django.db import transaction # Para garantir a segurança da transação
-from .forms import MovimentacaoForm # Importe nosso novo formulário
-from .models import Item, Movimentacao
-from django.db.models import Count
+from .forms import MovimentacaoForm, EscolaForm, RelatorioFiltroForm # Importe nosso novo formulário
+from .models import Item, Movimentacao, Escola
+from django.db.models import Sum, Count, Max, F, Q
+from django.utils import timezone
+from datetime import timedelta
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from weasyprint import HTML
 
 def home(request):
     # ... (sua view home continua igual)
@@ -69,21 +74,116 @@ def movimentar_item(request, pk):
     return render(request, 'estoque/movimentar_item.html', context)
 
 def relatorios(request):
-    # Relatório 1: Movimentações por escola
-    # values('escola__nome') -> Agrupa os resultados pelo nome da escola.
-    # annotate(total_movimentacoes=Count('id')) -> Para cada grupo, conta os IDs e nomeia o resultado de "total_movimentacoes".
-    # order_by('-total_movimentacoes') -> Ordena do maior para o menor.
-    movimentacoes_por_escola = Movimentacao.objects.values('escola__nome').annotate(
-        total_movimentacoes=Count('id')
-    ).order_by('-total_movimentacoes')
+    # Inicializa o formulário de filtro
+    form = RelatorioFiltroForm(request.GET)
 
-    # Relatório 2: Últimas 10 movimentações
-    # order_by('-data') -> Ordena pela data, da mais nova para a mais antiga.
-    # [:10] -> Pega apenas os 10 primeiros resultados.
-    ultimas_movimentacoes = Movimentacao.objects.all().order_by('-data')[:10]
+    # Base da consulta: apenas movimentações de SAÍDA
+    movimentacoes_saida = Movimentacao.objects.filter(tipo='SAIDA')
+
+    # --- Filtros ---
+    if form.is_valid():
+        periodo = form.cleaned_data.get('periodo')
+        item_selecionado = form.cleaned_data.get('item')
+
+        if periodo and periodo != 'todos':
+            dias = int(periodo)
+            data_limite = timezone.now() - timedelta(days=dias)
+            movimentacoes_saida = movimentacoes_saida.filter(data__gte=data_limite)
+
+        if item_selecionado:
+            movimentacoes_saida = movimentacoes_saida.filter(item=item_selecionado)
+
+    # --- Relatório 1: Movimentação por Período (Mensal/Anual) ---
+    # Agrupa por escola e por item, e soma as quantidades.
+    relatorio_periodo = movimentacoes_saida.values(
+        'escola__nome', 'item__nome'
+    ).annotate(
+        total_quantidade=Sum('quantidade')
+    ).order_by('escola__nome', 'item__nome')
+
+    # --- Relatório 2: Movimentação por Item ---
+    # Agrupa por item e calcula o total que saiu e a escola que mais recebeu.
+    relatorio_por_item = Item.objects.filter(
+        # Apenas itens que tiveram movimentação de saída
+        id__in=movimentacoes_saida.values_list('item_id', flat=True).distinct()
+    ).annotate(
+        # Soma a quantidade total de saída para cada item
+        # A correção está aqui: trocamos F() por Q()
+        total_saida=Sum('movimentacao__quantidade', filter=Q(movimentacao__in=movimentacoes_saida)),
+        # Encontra a escola que mais recebeu
+        # E aqui também: trocamos F() por Q()
+        escola_que_mais_recebeu=Max('movimentacao__escola__nome', filter=Q(movimentacao__in=movimentacoes_saida))
+    ).order_by('-total_saida')
 
     context = {
-        'movimentacoes_por_escola': movimentacoes_por_escola,
-        'ultimas_movimentacoes': ultimas_movimentacoes,
+        'form': form,
+        'relatorio_periodo': relatorio_periodo,
+        'relatorio_por_item': relatorio_por_item,
     }
     return render(request, 'estoque/relatorios.html', context)
+
+def lista_escolas(request):
+    escolas = Escola.objects.all().order_by('nome')
+    context = {
+        'escolas': escolas
+    }
+    return render(request, 'estoque/lista_escolas.html', context)
+
+# View para adicionar uma nova escola
+def adicionar_escola(request):
+    if request.method == 'POST':
+        form = EscolaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Nova escola cadastrada com sucesso!')
+            return redirect('estoque:lista_escolas')
+    else:
+        form = EscolaForm()
+
+    context = {
+        'form': form
+    }
+    return render(request, 'estoque/adicionar_escola.html', context)
+
+def relatorios_pdf(request):
+    # A lógica para buscar e filtrar os dados é EXATAMENTE A MESMA da view de relatórios
+    form = RelatorioFiltroForm(request.GET)
+    movimentacoes_saida = Movimentacao.objects.filter(tipo='SAIDA')
+    if form.is_valid():
+        periodo = form.cleaned_data.get('periodo')
+        item_selecionado = form.cleaned_data.get('item')
+        if periodo and periodo != 'todos':
+            dias = int(periodo)
+            data_limite = timezone.now() - timedelta(days=dias)
+            movimentacoes_saida = movimentacoes_saida.filter(data__gte=data_limite)
+        if item_selecionado:
+            movimentacoes_saida = movimentacoes_saida.filter(item=item_selecionado)
+
+    relatorio_periodo = movimentacoes_saida.values(
+        'escola__nome', 'item__nome'
+    ).annotate(total_quantidade=Sum('quantidade')).order_by('escola__nome', 'item__nome')
+
+    relatorio_por_item = Item.objects.filter(
+        id__in=movimentacoes_saida.values_list('item_id', flat=True).distinct()
+    ).annotate(
+        total_saida=Sum('movimentacao__quantidade', filter=Q(movimentacao__in=movimentacoes_saida)),
+        escola_que_mais_recebeu=Max('movimentacao__escola__nome', filter=Q(movimentacao__in=movimentacoes_saida))
+    ).order_by('-total_saida')
+
+    context = {
+        'relatorio_periodo': relatorio_periodo,
+        'relatorio_por_item': relatorio_por_item,
+    }
+
+    # --- A MÁGICA DO PDF ACONTECE AQUI ---
+    # 1. Renderiza o template HTML como uma string
+    html_string = render_to_string('estoque/relatorio_pdf_template.html', context)
+
+    # 2. Converte a string HTML para PDF usando WeasyPrint
+    html = HTML(string=html_string)
+    pdf = html.write_pdf()
+
+    # 3. Cria uma resposta HTTP com o PDF
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="relatorio_estoque.pdf"' # Força o download
+    return response
