@@ -1,5 +1,5 @@
 from django import forms
-from .models import Movimentacao, Escola, Item
+from .models import Movimentacao, Escola, Item, Fornecedor
 
 class MovimentacaoForm(forms.ModelForm):
     class Meta:
@@ -29,3 +29,10 @@ class RelatorioFiltroForm(forms.Form):
         label="Item Específico",
         empty_label="-- Todos os Itens --"
     )
+
+class ItemForm(forms.ModelForm):
+    class Meta:
+        model = Item
+        # quantidade_disponivel será igual à total no cadastro
+        fields = ['nome', 'descricao', 'fornecedor', 'quantidade_total']
+                

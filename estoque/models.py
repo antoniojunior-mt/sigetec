@@ -11,15 +11,25 @@ class Escola(models.Model):
     def __str__(self):
         return self.nome
 
+class Fornecedor(models.Model):
+    nome = models.CharField(max_length=200, verbose_name="Nome do Fornecedor")
+
+    def __str__(self):
+        return self.nome
+
 # Tabela ITENS
 class Item(models.Model):
     nome = models.CharField(max_length=200, verbose_name="Nome do Item")
     descricao = models.TextField(verbose_name="Descrição", null=True, blank=True)
+    # --- ADICIONE ESTA LINHA ---
+    fornecedor = models.ForeignKey(Fornecedor, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Fornecedor")
+
     quantidade_total = models.PositiveIntegerField(verbose_name="Quantidade Total em Estoque")
     quantidade_disponivel = models.PositiveIntegerField(verbose_name="Quantidade Disponível")
-    
+
     def __str__(self):
         return f"{self.nome} (Disponível: {self.quantidade_disponivel})"
+
 
 # Tabela MOVIMENTACAO
 class Movimentacao(models.Model):

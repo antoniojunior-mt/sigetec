@@ -1,33 +1,41 @@
-{% extends 'estoque/base.html' %}
+{% extends 'estoque/base.html' %} {# Adicionando a herança do base.html #}
 
 {% block title %}Página Inicial - SEGITEC{% endblock %}
 
 {% block content %}
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>Itens em Estoque</h1>
-        <a href="{% url 'estoque:relatorios' %}" class="btn btn-secondary">Ver Relatórios</a>
+<div class="container mt-5">
+    <div class="p-5 mb-4 bg-light rounded-3 text-center">
+        <h1 class="display-4 fw-bold">Bem-vindo ao SGITEC</h1>
+        <p class="fs-4">Sistema de Gestão de Itens Tecnológicos.</p>
     </div>
 
-    <table class="table table-striped table-hover">
-        <thead class="table-light">
-            <tr>
-                <th>Nome do Item</th>
-                <th>Descrição</th>
-                <th>Quantidade Disponível</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in todos_os_itens %}
-            <tr>
-                <td><a href="{% url 'estoque:detalhe_item' item.pk %}">{{ item.nome }}</a></td>
-                <td>{{ item.descricao|default:"-" }}</td>
-                <td>{{ item.quantidade_disponivel }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="3" class="text-center">Nenhum item cadastrado no estoque.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card text-center p-4 h-100">
+                <div class="card-icon mb-3" style="font-size: 50px;">📦</div>
+                <h5 class="card-title">Itens em Estoque</h5>
+                <p class="card-text">Visualizar, adicionar e gerenciar todos os itens disponíveis.</p>
+                <a href="{% url 'estoque:lista_itens' %}" class="btn btn-primary mt-auto">Ver Itens</a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-center p-4 h-100">
+                <div class="card-icon mb-3" style="font-size: 50px;">🏫</div>
+                <h5 class="card-title">Escolas</h5>
+                <p class="card-text">Visualizar e gerenciar as escolas cadastradas.</p>
+                <a href="{% url 'estoque:lista_escolas' %}" class="btn btn-primary mt-auto">Ver Escolas</a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-center p-4 h-100">
+                <div class="card-icon mb-3" style="font-size: 50px;">📊</div>
+                <h5 class="card-title">Relatórios</h5>
+                <p class="card-text">Analisar dados de movimentação e desempenho do estoque.</p>
+                <a href="{% url 'estoque:relatorios' %}" class="btn btn-primary mt-auto">Ver Relatórios</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

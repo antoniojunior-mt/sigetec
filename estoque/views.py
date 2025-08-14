@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect # Adicione redirect
 from django.contrib import messages # Para mostrar mensagens ao usuário
 from django.db import transaction # Para garantir a segurança da transação
-from .forms import MovimentacaoForm, EscolaForm, RelatorioFiltroForm # Importe nosso novo formulário
+from .forms import MovimentacaoForm, EscolaForm, RelatorioFiltroForm, ItemForm # Importe nosso novo formulário
 from .models import Item, Movimentacao, Escola
 from django.db.models import Sum, Count, Max, F, Q
 from django.utils import timezone
@@ -10,13 +10,13 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from weasyprint import HTML
 
-def home(request):
-    # ... (sua view home continua igual)
-    itens = Item.objects.all()
+def lista_itens(request):
+    itens = Item.objects.all().order_by('nome')
     context = {
         'todos_os_itens': itens
     }
-    return render(request, 'estoque/home.html', context)
+    # AGORA APONTANDO PARA O TEMPLATE CERTO
+    return render(request, 'estoque/lista_itens.html', context)
 
 # --- ADICIONE ESTA NOVA FUNÇÃO ---
 def detalhe_item(request, pk): # Ponto crítico
@@ -25,6 +25,22 @@ def detalhe_item(request, pk): # Ponto crítico
         'item': item
     }
     return render(request, 'estoque/detalhe_item.html', context)
+
+def adicionar_item(request):
+    if request.method == 'POST':
+        form = ItemForm(request.POST)
+        if form.is_valid():
+            item = form.save(commit=False)
+            # Define a quantidade disponível igual à total no momento do cadastro
+            item.quantidade_disponivel = item.quantidade_total
+            item.save()
+            messages.success(request, 'Novo item cadastrado com sucesso!')
+            return redirect('estoque:lista_itens') # Redireciona para a nova lista de itens
+    else:
+        form = ItemForm()
+
+    context = { 'form': form }
+    return render(request, 'estoque/adicionar_item.html', context)
 
 def movimentar_item(request, pk):
     item = get_object_or_404(Item, pk=pk)
@@ -187,3 +203,7 @@ def relatorios_pdf(request):
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="relatorio_estoque.pdf"' # Força o download
     return response
+
+def home(request):
+    # Futuramente, podemos adicionar estatísticas aqui (total de itens, etc.)
+    return render(request, 'estoque/home.html')
