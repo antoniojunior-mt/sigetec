@@ -1,9 +1,48 @@
 from django.db import models
-from django.utils import timezone # Vamos usar para a data
+from django.utils import timezone
 
-# Create your models here.
+# NOVO MODELO: Categoria
+class Categoria(models.Model):
+    nome = models.CharField(max_length=100, unique=True)
 
-# Tabela ESCOLAS
+    class Meta:
+        ordering = ['nome'] # Ordena as categorias por nome
+
+    def __str__(self):
+        return self.nome
+
+# NOVO MODELO: Fornecedor (sem alterações)
+class Fornecedor(models.Model):
+    nome = models.CharField(max_length=200, verbose_name="Nome do Fornecedor")
+
+    def __str__(self):
+        return self.nome
+
+# NOVO MODELO: Produto (o nosso antigo "Item")
+class Produto(models.Model):
+    nome = models.CharField(max_length=200, unique=True, verbose_name="Nome do Produto")
+    descricao = models.TextField(verbose_name="Descrição", null=True, blank=True)
+    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, verbose_name="Categoria")
+
+    class Meta:
+        ordering = ['nome']
+
+    def __str__(self):
+        return self.nome
+
+# MODELO 'Item' RENOMEADO E TRANSFORMADO EM 'Estoque'
+class Estoque(models.Model):
+    # Ligação com o catálogo de produtos
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
+    fornecedor = models.ForeignKey(Fornecedor, on_delete=models.SET_NULL, null=True, blank=True)
+    quantidade = models.PositiveIntegerField()
+    preco_custo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Preço de Custo")
+    data_entrada = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Lote de {self.quantidade}x {self.produto.nome} (Fornecedor: {self.fornecedor.nome if self.fornecedor else 'N/A'})"
+
+# MODELO 'Escola' (sem alterações)
 class Escola(models.Model):
     nome = models.CharField(max_length=200, verbose_name="Nome da Escola")
     endereco = models.TextField(verbose_name="Endereço", null=True, blank=True)
@@ -11,40 +50,20 @@ class Escola(models.Model):
     def __str__(self):
         return self.nome
 
-class Fornecedor(models.Model):
-    nome = models.CharField(max_length=200, verbose_name="Nome do Fornecedor")
-
-    def __str__(self):
-        return self.nome
-
-# Tabela ITENS
-class Item(models.Model):
-    nome = models.CharField(max_length=200, verbose_name="Nome do Item")
-    descricao = models.TextField(verbose_name="Descrição", null=True, blank=True)
-    # --- ADICIONE ESTA LINHA ---
-    fornecedor = models.ForeignKey(Fornecedor, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Fornecedor")
-
-    quantidade_total = models.PositiveIntegerField(verbose_name="Quantidade Total em Estoque")
-    quantidade_disponivel = models.PositiveIntegerField(verbose_name="Quantidade Disponível")
-
-    def __str__(self):
-        return f"{self.nome} (Disponível: {self.quantidade_disponivel})"
-
-
-# Tabela MOVIMENTACAO
+# MODELO 'Movimentacao' (PRECISA SER ATUALIZADO)
 class Movimentacao(models.Model):
-    
-    # Opções para o campo 'tipo'
     TIPO_CHOICES = [
         ('SAIDA', 'Saída para Escola'),
-        ('ENTRADA', 'Entrada no Estoque'),
+        ('ENTRADA', 'Entrada no Estoque'), # Manteremos isso para o histórico
     ]
 
-    item = models.ForeignKey(Item, on_delete=models.PROTECT, verbose_name="Item")
+    # AGORA a movimentação é de um PRODUTO, não de um Lote de Estoque.
+    produto = models.ForeignKey(Produto, on_delete=models.PROTECT, verbose_name="Produto")
     escola = models.ForeignKey(Escola, on_delete=models.PROTECT, verbose_name="Escola")
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, verbose_name="Tipo de Movimentação")
     quantidade = models.PositiveIntegerField(verbose_name="Quantidade Movimentada")
     data = models.DateTimeField(default=timezone.now, verbose_name="Data da Movimentação")
-    
+
     def __str__(self):
-        return f"{self.get_tipo_display()} de {self.quantidade}x {self.item.nome}"
+        return f"{self.get_tipo_display()} de {self.quantidade}x {self.produto.nome}"
+    

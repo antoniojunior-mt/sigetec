@@ -1,0 +1,20 @@
+{% extends 'estoque/base.html' %}
+{% block title %}Detalhes de: {{ produto.nome }}{% endblock %}
+{% block content %}
+    {% if messages %}{% for message in messages %}<div class="alert alert-success">{{ message }}</div>{% endfor %}{% endif %}
+    <div class="card">
+        <div class="card-header"><h1 class="card-title mb-0">{{ produto.nome }}</h1></div>
+        <div class="card-body">
+            <p><strong>Categoria:</strong> {{ produto.categoria.nome }}</p>
+            <p><strong>Descrição:</strong> {{ produto.descricao|default:"-" }}</p>
+            <p><strong>Estoque Disponível:</strong> <span class="badge bg-primary fs-5">{{ estoque_disponivel }}</span></p>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+            <div>
+                <a href="{% url 'estoque:entrada_estoque' produto.pk %}" class="btn btn-success">Registrar Entrada</a>
+                <a href="{% url 'estoque:movimentar_produto' produto.pk %}" class="btn btn-warning">Registrar Saída</a>
+            </div>
+            <a href="{% url 'estoque:lista_produtos' %}" class="btn btn-secondary">Voltar para a Lista</a>
+        </div>
+    </div>
+    {% endblock %}
